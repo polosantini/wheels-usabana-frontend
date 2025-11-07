@@ -651,15 +651,14 @@ export default function MyVehicle() {
                           width: '100%',
                           padding: '10px 16px',
                           textAlign: 'left',
-                          backgroundColor: 'transparent',
+                          backgroundColor: '#f0f9ff',
                           border: 'none',
                           color: '#032567',
                           fontSize: '0.9rem',
                           cursor: 'pointer',
                           fontFamily: 'Inter, sans-serif',
                           transition: 'background-color 0.2s',
-                          fontWeight: '600',
-                          backgroundColor: '#f0f9ff'
+                          fontWeight: '600'
                         }}
                         onMouseEnter={(e) => e.target.style.backgroundColor = '#e0f2fe'}
                         onMouseLeave={(e) => e.target.style.backgroundColor = '#f0f9ff'}

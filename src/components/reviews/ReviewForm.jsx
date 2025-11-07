@@ -59,8 +59,14 @@ export default function ReviewForm({
               key={value}
               type="button"
               onClick={() => setRating(value)}
-              onMouseEnter={() => setHoveredRating(value)}
-              onMouseLeave={() => setHoveredRating(0)}
+              onMouseEnter={(e) => {
+                setHoveredRating(value);
+                if (!isLocked && !loading) e.target.style.transform = 'scale(1.1)';
+              }}
+              onMouseLeave={(e) => {
+                setHoveredRating(0);
+                e.target.style.transform = 'scale(1)';
+              }}
               style={{
                 padding: '4px',
                 background: 'transparent',
@@ -70,12 +76,6 @@ export default function ReviewForm({
                 opacity: (isLocked || loading) ? 0.5 : 1
               }}
               disabled={isLocked || loading}
-              onMouseEnter={(e) => {
-                if (!isLocked && !loading) e.target.style.transform = 'scale(1.1)';
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.transform = 'scale(1)';
-              }}
             >
               <Star
                 style={{
