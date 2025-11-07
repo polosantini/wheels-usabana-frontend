@@ -1,18 +1,17 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
 import { searchTrips } from '../../api/trip';
 import { createBooking } from '../../api/booking';
-import logo from '../../assets/images/UniSabana Logo.png';
 import Toast from '../../components/common/Toast';
+import Navbar from '../../components/common/Navbar';
 
 export default function SearchTrips() {
   const navigate = useNavigate();
-  const { user, logout } = useAuthStore();
+  const { user } = useAuthStore();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [trips, setTrips] = useState([]);
-  const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [selectedTrip, setSelectedTrip] = useState(null);
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [bookingSeats, setBookingSeats] = useState(1);
@@ -27,7 +26,16 @@ export default function SearchTrips() {
   const [filters, setFilters] = useState({
     qOrigin: '',
     qDestination: '',
+    fromDate: '',
+    toDate: '',
+    fromTime: '',
+    toTime: '',
+    minAvailableSeats: '',
+    minPrice: '',
+    maxPrice: '',
   });
+  
+  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     loadTrips();
@@ -50,6 +58,39 @@ export default function SearchTrips() {
       if (filters.qDestination?.trim()) {
         params.qDestination = filters.qDestination.trim();
       }
+      
+      // Date filters
+      if (filters.fromDate) {
+        const fromDate = new Date(filters.fromDate);
+        fromDate.setHours(0, 0, 0, 0);
+        params.fromDate = fromDate.toISOString();
+      }
+      if (filters.toDate) {
+        const toDate = new Date(filters.toDate);
+        toDate.setHours(23, 59, 59, 999);
+        params.toDate = toDate.toISOString();
+      }
+      
+      // Time filters
+      if (filters.fromTime) {
+        params.fromTime = filters.fromTime;
+      }
+      if (filters.toTime) {
+        params.toTime = filters.toTime;
+      }
+      
+      // Availability filter
+      if (filters.minAvailableSeats) {
+        params.minAvailableSeats = parseInt(filters.minAvailableSeats);
+      }
+      
+      // Price filters
+      if (filters.minPrice) {
+        params.minPrice = parseFloat(filters.minPrice);
+      }
+      if (filters.maxPrice) {
+        params.maxPrice = parseFloat(filters.maxPrice);
+      }
 
       const result = await searchTrips(params);
       setTrips(result.items || []);
@@ -67,18 +108,34 @@ export default function SearchTrips() {
   };
 
   const clearFilters = () => {
-    setFilters({ qOrigin: '', qDestination: '' });
+    setFilters({
+      qOrigin: '',
+      qDestination: '',
+      fromDate: '',
+      toDate: '',
+      fromTime: '',
+      toTime: '',
+      minAvailableSeats: '',
+      minPrice: '',
+      maxPrice: '',
+    });
     setTimeout(() => loadTrips(), 100);
   };
-
-  const handleLogout = async () => {
-    try {
-      await logout();
-      navigate('/login');
-    } catch (err) {
-      console.error('[SearchTrips] Logout error:', err);
-    }
+  
+  const hasActiveFilters = () => {
+    return !!(
+      filters.qOrigin?.trim() ||
+      filters.qDestination?.trim() ||
+      filters.fromDate ||
+      filters.toDate ||
+      filters.fromTime ||
+      filters.toTime ||
+      filters.minAvailableSeats ||
+      filters.minPrice ||
+      filters.maxPrice
+    );
   };
+
 
   const handleRequestBooking = () => {
     setShowBookingModal(true);
@@ -143,296 +200,10 @@ export default function SearchTrips() {
     }).format(price);
   };
 
-  // Close profile menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (showProfileMenu && !event.target.closest('.profile-menu-container')) {
-        setShowProfileMenu(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showProfileMenu]);
-
   return (
     <div style={{ minHeight: '100vh', backgroundColor: 'white' }}>
       {/* Navbar */}
-      <header style={{
-        width: '100%',
-        borderBottom: '1px solid #e7e5e4',
-        backgroundColor: 'white',
-        position: 'sticky',
-        top: 0,
-        zIndex: 10
-      }}>
-        <div style={{
-          maxWidth: '1280px',
-          margin: '0 auto',
-          padding: '16px 24px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between'
-        }}>
-          {/* Left: Logo + Text */}
-          <Link 
-            to="/dashboard" 
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              textDecoration: 'none',
-              transition: 'opacity 0.2s'
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
-            onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
-          >
-            <img 
-              src={logo} 
-              alt="Wheels UniSabana Logo" 
-              style={{ 
-                height: '4rem', 
-                width: 'auto',
-                objectFit: 'contain'
-              }}
-            />
-            <span style={{
-              fontSize: '20px',
-              fontWeight: 'normal',
-              color: '#1c1917',
-              fontFamily: 'Inter, sans-serif'
-            }}>
-              Wheels UniSabana
-            </span>
-          </Link>
-
-          {/* Center: Navigation Links */}
-          <nav style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '32px'
-          }}>
-            <Link
-              to="/my-trips"
-              style={{
-                fontSize: '1rem',
-                fontWeight: '500',
-                color: '#1c1917',
-                textDecoration: 'none',
-                transition: 'color 0.2s',
-                fontFamily: 'Inter, sans-serif'
-              }}
-              onMouseEnter={(e) => e.target.style.color = '#032567'}
-              onMouseLeave={(e) => e.target.style.color = '#1c1917'}
-            >
-              Mis viajes
-            </Link>
-            
-            <Link
-              to="/reports"
-              style={{
-                fontSize: '1rem',
-                fontWeight: '500',
-                color: '#1c1917',
-                textDecoration: 'none',
-                transition: 'color 0.2s',
-                fontFamily: 'Inter, sans-serif'
-              }}
-              onMouseEnter={(e) => e.target.style.color = '#032567'}
-              onMouseLeave={(e) => e.target.style.color = '#1c1917'}
-            >
-              Reportes
-            </Link>
-            
-            <Link
-              to="/search"
-              style={{
-                fontSize: '1rem',
-                fontWeight: '500',
-                color: '#032567',
-                textDecoration: 'none',
-                transition: 'color 0.2s',
-                fontFamily: 'Inter, sans-serif',
-                borderBottom: '2px solid #032567'
-              }}
-            >
-              Buscar viajes
-            </Link>
-          </nav>
-
-          {/* Right: Role Status + Profile */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '16px'
-          }}>
-            {/* Role indicator */}
-            <div style={{
-              padding: '6px 16px',
-              backgroundColor: '#f0f9ff',
-              color: '#032567',
-              borderRadius: '20px',
-              fontSize: '0.9rem',
-              fontWeight: '500',
-              fontFamily: 'Inter, sans-serif'
-            }}>
-              Pasajero
-            </div>
-
-            {/* Profile button with menu */}
-            <div className="profile-menu-container" style={{ position: 'relative' }}>
-              <button
-                onClick={() => setShowProfileMenu(!showProfileMenu)}
-                style={{
-                  height: '3rem',
-                  width: '3rem',
-                  borderRadius: '50%',
-                  backgroundColor: '#032567',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'white',
-                  fontSize: '1rem',
-                  fontWeight: '600',
-                  border: 'none',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  fontFamily: 'Inter, sans-serif'
-                }}
-                onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
-                onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
-                title={`${user?.firstName} ${user?.lastName}`}
-              >
-                {user?.firstName?.[0]}{user?.lastName?.[0]}
-              </button>
-
-              {/* Dropdown menu */}
-              {showProfileMenu && (
-                <div style={{
-                  position: 'absolute',
-                  right: 0,
-                  marginTop: '8px',
-                  width: '220px',
-                  backgroundColor: 'white',
-                  borderRadius: '12px',
-                  boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-                  border: '1px solid #e7e5e4',
-                  padding: '8px 0',
-                  zIndex: 20
-                }}>
-                  {/* User info */}
-                  <div style={{
-                    padding: '12px 16px',
-                    borderBottom: '1px solid #e7e5e4'
-                  }}>
-                    <p style={{
-                      fontSize: '0.9rem',
-                      fontWeight: '600',
-                      color: '#1c1917',
-                      margin: 0,
-                      fontFamily: 'Inter, sans-serif'
-                    }}>
-                      {user?.firstName} {user?.lastName}
-                    </p>
-                    <p style={{
-                      fontSize: '0.75rem',
-                      color: '#57534e',
-                      margin: '4px 0 0 0',
-                      fontFamily: 'Inter, sans-serif'
-                    }}>
-                      {user?.corporateEmail}
-                    </p>
-                  </div>
-
-                  {/* Menu items */}
-                  <div style={{ padding: '4px 0' }}>
-                    <button
-                      onClick={() => {
-                        setShowProfileMenu(false);
-                        navigate('/profile');
-                      }}
-                      style={{
-                        width: '100%',
-                        padding: '10px 16px',
-                        textAlign: 'left',
-                        fontSize: '0.9rem',
-                        color: '#1c1917',
-                        backgroundColor: 'transparent',
-                        border: 'none',
-                        cursor: 'pointer',
-                        transition: 'background-color 0.2s',
-                        fontFamily: 'Inter, sans-serif',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px'
-                      }}
-                      onMouseEnter={(e) => e.target.style.backgroundColor = '#f5f5f4'}
-                      onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-                    >
-                      Mi perfil
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        setShowProfileMenu(false);
-                        navigate('/search');
-                      }}
-                      style={{
-                        width: '100%',
-                        padding: '10px 16px',
-                        textAlign: 'left',
-                        fontSize: '0.9rem',
-                        color: '#1c1917',
-                        backgroundColor: 'transparent',
-                        border: 'none',
-                        cursor: 'pointer',
-                        transition: 'background-color 0.2s',
-                        fontFamily: 'Inter, sans-serif',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px'
-                      }}
-                      onMouseEnter={(e) => e.target.style.backgroundColor = '#f5f5f4'}
-                      onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-                    >
-                      Buscar viajes
-                    </button>
-                  </div>
-
-                  {/* Logout */}
-                  <div style={{
-                    borderTop: '1px solid #e7e5e4',
-                    paddingTop: '4px'
-                  }}>
-                    <button
-                      onClick={handleLogout}
-                      style={{
-                        width: '100%',
-                        padding: '10px 16px',
-                        textAlign: 'left',
-                        fontSize: '0.9rem',
-                        color: '#dc2626',
-                        backgroundColor: 'transparent',
-                        border: 'none',
-                        cursor: 'pointer',
-                        transition: 'background-color 0.2s',
-                        fontFamily: 'Inter, sans-serif',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px'
-                      }}
-                      onMouseEnter={(e) => e.target.style.backgroundColor = '#fef2f2'}
-                      onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-                    >
-                      Cerrar sesión
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </header>
+      <Navbar activeLink="search" />
 
       {/* Main Content */}
       <div style={{
@@ -569,7 +340,341 @@ export default function SearchTrips() {
               </button>
             )}
           </div>
+          
+          {/* Filters Toggle */}
+          <div style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <button
+              type="button"
+              onClick={() => setShowFilters(!showFilters)}
+              style={{
+                padding: '8px 16px',
+                fontSize: '0.9rem',
+                fontWeight: 'normal',
+                color: '#032567',
+                backgroundColor: 'white',
+                border: '2px solid #032567',
+                borderRadius: '20px',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                fontFamily: 'Inter, sans-serif',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.backgroundColor = '#f0f9ff';
+                e.target.style.borderColor = '#1A6EFF';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.backgroundColor = 'white';
+                e.target.style.borderColor = '#032567';
+              }}
+            >
+              {showFilters ? '▼' : '▶'} Filtros avanzados
+            </button>
+            
+            {hasActiveFilters() && (
+              <span style={{
+                fontSize: '0.85rem',
+                color: '#57534e',
+                fontFamily: 'Inter, sans-serif'
+              }}>
+                Filtros activos
+              </span>
+            )}
+          </div>
         </form>
+        
+        {/* Advanced Filters Panel */}
+        {showFilters && (
+          <div style={{
+            backgroundColor: '#fafafa',
+            padding: '24px',
+            borderRadius: '16px',
+            marginBottom: '32px',
+            border: '1px solid #e7e5e4'
+          }}>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+              gap: '20px'
+            }}>
+              {/* Date Filters */}
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: '0.9rem',
+                  fontWeight: '500',
+                  color: '#1c1917',
+                  marginBottom: '8px',
+                  fontFamily: 'Inter, sans-serif'
+                }}>
+                  Fecha desde
+                </label>
+                <input
+                  type="date"
+                  value={filters.fromDate}
+                  onChange={(e) => setFilters({ ...filters, fromDate: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '10px 14px',
+                    fontSize: '14px',
+                    border: '2px solid #e7e5e4',
+                    borderRadius: '12px',
+                    backgroundColor: 'white',
+                    outline: 'none',
+                    transition: 'all 0.2s',
+                    fontFamily: 'Inter, sans-serif'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = '#032567'}
+                  onBlur={(e) => e.target.style.borderColor = '#e7e5e4'}
+                />
+              </div>
+              
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: '0.9rem',
+                  fontWeight: '500',
+                  color: '#1c1917',
+                  marginBottom: '8px',
+                  fontFamily: 'Inter, sans-serif'
+                }}>
+                  Fecha hasta
+                </label>
+                <input
+                  type="date"
+                  value={filters.toDate}
+                  onChange={(e) => setFilters({ ...filters, toDate: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '10px 14px',
+                    fontSize: '14px',
+                    border: '2px solid #e7e5e4',
+                    borderRadius: '12px',
+                    backgroundColor: 'white',
+                    outline: 'none',
+                    transition: 'all 0.2s',
+                    fontFamily: 'Inter, sans-serif'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = '#032567'}
+                  onBlur={(e) => e.target.style.borderColor = '#e7e5e4'}
+                />
+              </div>
+              
+              {/* Time Filters */}
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: '0.9rem',
+                  fontWeight: '500',
+                  color: '#1c1917',
+                  marginBottom: '8px',
+                  fontFamily: 'Inter, sans-serif'
+                }}>
+                  Hora desde
+                </label>
+                <input
+                  type="time"
+                  value={filters.fromTime}
+                  onChange={(e) => setFilters({ ...filters, fromTime: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '10px 14px',
+                    fontSize: '14px',
+                    border: '2px solid #e7e5e4',
+                    borderRadius: '12px',
+                    backgroundColor: 'white',
+                    outline: 'none',
+                    transition: 'all 0.2s',
+                    fontFamily: 'Inter, sans-serif'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = '#032567'}
+                  onBlur={(e) => e.target.style.borderColor = '#e7e5e4'}
+                />
+              </div>
+              
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: '0.9rem',
+                  fontWeight: '500',
+                  color: '#1c1917',
+                  marginBottom: '8px',
+                  fontFamily: 'Inter, sans-serif'
+                }}>
+                  Hora hasta
+                </label>
+                <input
+                  type="time"
+                  value={filters.toTime}
+                  onChange={(e) => setFilters({ ...filters, toTime: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '10px 14px',
+                    fontSize: '14px',
+                    border: '2px solid #e7e5e4',
+                    borderRadius: '12px',
+                    backgroundColor: 'white',
+                    outline: 'none',
+                    transition: 'all 0.2s',
+                    fontFamily: 'Inter, sans-serif'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = '#032567'}
+                  onBlur={(e) => e.target.style.borderColor = '#e7e5e4'}
+                />
+              </div>
+              
+              {/* Availability Filter */}
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: '0.9rem',
+                  fontWeight: '500',
+                  color: '#1c1917',
+                  marginBottom: '8px',
+                  fontFamily: 'Inter, sans-serif'
+                }}>
+                  Mínimo de asientos disponibles
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  placeholder="Ej: 2"
+                  value={filters.minAvailableSeats}
+                  onChange={(e) => setFilters({ ...filters, minAvailableSeats: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '10px 14px',
+                    fontSize: '14px',
+                    border: '2px solid #e7e5e4',
+                    borderRadius: '12px',
+                    backgroundColor: 'white',
+                    outline: 'none',
+                    transition: 'all 0.2s',
+                    fontFamily: 'Inter, sans-serif'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = '#032567'}
+                  onBlur={(e) => e.target.style.borderColor = '#e7e5e4'}
+                />
+              </div>
+              
+              {/* Price Filters */}
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: '0.9rem',
+                  fontWeight: '500',
+                  color: '#1c1917',
+                  marginBottom: '8px',
+                  fontFamily: 'Inter, sans-serif'
+                }}>
+                  Precio mínimo (COP)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  step="100"
+                  placeholder="Ej: 5000"
+                  value={filters.minPrice}
+                  onChange={(e) => setFilters({ ...filters, minPrice: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '10px 14px',
+                    fontSize: '14px',
+                    border: '2px solid #e7e5e4',
+                    borderRadius: '12px',
+                    backgroundColor: 'white',
+                    outline: 'none',
+                    transition: 'all 0.2s',
+                    fontFamily: 'Inter, sans-serif'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = '#032567'}
+                  onBlur={(e) => e.target.style.borderColor = '#e7e5e4'}
+                />
+              </div>
+              
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: '0.9rem',
+                  fontWeight: '500',
+                  color: '#1c1917',
+                  marginBottom: '8px',
+                  fontFamily: 'Inter, sans-serif'
+                }}>
+                  Precio máximo (COP)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  step="100"
+                  placeholder="Ej: 20000"
+                  value={filters.maxPrice}
+                  onChange={(e) => setFilters({ ...filters, maxPrice: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '10px 14px',
+                    fontSize: '14px',
+                    border: '2px solid #e7e5e4',
+                    borderRadius: '12px',
+                    backgroundColor: 'white',
+                    outline: 'none',
+                    transition: 'all 0.2s',
+                    fontFamily: 'Inter, sans-serif'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = '#032567'}
+                  onBlur={(e) => e.target.style.borderColor = '#e7e5e4'}
+                />
+              </div>
+            </div>
+            
+            {/* Apply Filters Button */}
+            <div style={{ marginTop: '20px', display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button
+                type="button"
+                onClick={clearFilters}
+                style={{
+                  padding: '10px 20px',
+                  fontSize: '0.9rem',
+                  fontWeight: 'normal',
+                  color: '#57534e',
+                  backgroundColor: 'white',
+                  border: '2px solid #d9d9d9',
+                  borderRadius: '20px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  fontFamily: 'Inter, sans-serif'
+                }}
+                onMouseEnter={(e) => e.target.style.backgroundColor = '#f5f5f4'}
+                onMouseLeave={(e) => e.target.style.backgroundColor = 'white'}
+              >
+                Limpiar filtros
+              </button>
+              <button
+                type="button"
+                onClick={loadTrips}
+                style={{
+                  padding: '10px 20px',
+                  fontSize: '0.9rem',
+                  fontWeight: 'normal',
+                  color: 'white',
+                  backgroundColor: '#032567',
+                  border: 'none',
+                  borderRadius: '20px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  fontFamily: 'Inter, sans-serif',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+                }}
+                onMouseEnter={(e) => e.target.style.backgroundColor = '#1A6EFF'}
+                onMouseLeave={(e) => e.target.style.backgroundColor = '#032567'}
+              >
+                Aplicar filtros
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Error Alert */}
         {error && (
@@ -583,7 +688,6 @@ export default function SearchTrips() {
             alignItems: 'start',
             gap: '12px'
           }}>
-            <span style={{ color: '#dc2626', fontSize: '20px' }}>⚠️</span>
             <div style={{ flex: 1 }}>
               <p style={{ color: '#991b1b', fontSize: '14px', margin: 0 }}>
                 {error}
@@ -769,8 +873,8 @@ export default function SearchTrips() {
                       color: '#57534e',
                       fontFamily: 'Inter, sans-serif'
                     }}>
-                      <span>💺 {trip.totalSeats} asientos</span>
-                      <span>👤 {trip.driver?.firstName}</span>
+                      <span>{trip.totalSeats} asientos</span>
+                      <span>{trip.driver?.firstName}</span>
                     </div>
 
                     {/* Notes preview */}
@@ -787,7 +891,7 @@ export default function SearchTrips() {
                         overflow: 'hidden',
                         textOverflow: 'ellipsis'
                       }}>
-                        💬 {trip.notes.substring(0, 80)}{trip.notes.length > 80 ? '...' : ''}
+                        {trip.notes.substring(0, 80)}{trip.notes.length > 80 ? '...' : ''}
                       </div>
                     )}
                   </div>
@@ -1049,7 +1153,6 @@ export default function SearchTrips() {
               backgroundColor: '#f5f5f4',
               borderRadius: '12px'
             }}>
-              <span style={{ fontSize: '2rem' }}>💺</span>
               <div>
                 <p style={{
                   fontSize: '0.8rem',
@@ -1178,7 +1281,7 @@ export default function SearchTrips() {
         </div>
       )}
 
-      {/* Booking Modal */}
+      {/* Simple Booking Modal */}
       {showBookingModal && selectedTrip && !bookingSuccess && (
         <div
           style={{
@@ -1195,189 +1298,224 @@ export default function SearchTrips() {
         >
           <div
             style={{
-              maxWidth: '500px',
+              maxWidth: '600px',
               width: '100%',
               backgroundColor: 'white',
               borderRadius: '16px',
               padding: '32px',
-              boxShadow: '0 20px 25px rgba(0,0,0,0.15)'
+              boxShadow: '0 20px 25px rgba(0,0,0,0.15)',
+              maxHeight: '90vh',
+              overflowY: 'auto'
             }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <h2 style={{
-              fontSize: '1.8rem',
-              fontWeight: 'normal',
-              color: '#1c1917',
-              marginBottom: '8px',
-              fontFamily: 'Inter, sans-serif'
-            }}>
-              Solicitar reserva
-            </h2>
-            
-            <p style={{
-              fontSize: '0.95rem',
-              color: '#57534e',
-              marginBottom: '24px',
-              fontFamily: 'Inter, sans-serif'
-            }}>
-              {selectedTrip.origin.text} → {selectedTrip.destination.text}
-            </p>
-
-            {/* Seats selector */}
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{
-                display: 'block',
-                fontSize: '1.1rem',
-                fontWeight: '500',
-                color: '#1c1917',
-                marginBottom: '8px',
-                fontFamily: 'Inter, sans-serif'
-              }}>
-                Número de asientos
-              </label>
-              <input
-                type="number"
-                min="1"
-                max={selectedTrip.totalSeats}
-                value={bookingSeats}
-                onChange={(e) => setBookingSeats(Math.min(Math.max(1, parseInt(e.target.value) || 1), selectedTrip.totalSeats))}
-                style={{
-                  width: '100%',
-                  padding: '12px 16px',
-                  fontSize: '15px',
-                  border: '2px solid transparent',
-                  borderRadius: '25px',
-                  backgroundColor: '#d9d9d9',
-                  outline: 'none',
-                  transition: 'all 0.2s',
-                  fontFamily: 'Inter, sans-serif'
-                }}
-              />
-              <p style={{
-                fontSize: '0.85rem',
-                color: '#57534e',
-                marginTop: '6px',
-                margin: '6px 0 0 0',
-                fontFamily: 'Inter, sans-serif'
-              }}>
-                Disponibles: {selectedTrip.totalSeats} • Precio por asiento: {formatPrice(selectedTrip.pricePerSeat)}
-              </p>
-            </div>
-
-            {/* Total price */}
             <div style={{
-              backgroundColor: '#f0f9ff',
-              padding: '16px',
-              borderRadius: '12px',
-              marginBottom: '20px',
-              textAlign: 'center'
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '24px'
             }}>
-              <p style={{
-                fontSize: '0.9rem',
-                color: '#57534e',
-                margin: '0 0 4px 0',
-                fontFamily: 'Inter, sans-serif'
-              }}>
-                Total a pagar
-              </p>
-              <p style={{
+              <h2 style={{
                 fontSize: '1.8rem',
-                fontWeight: '600',
-                color: '#032567',
+                fontWeight: 'normal',
+                color: '#1c1917',
                 margin: 0,
                 fontFamily: 'Inter, sans-serif'
               }}>
-                {formatPrice(selectedTrip.pricePerSeat * bookingSeats)}
-              </p>
-            </div>
-
-            {/* Note */}
-            <div style={{ marginBottom: '24px' }}>
-              <label style={{
-                display: 'block',
-                fontSize: '1.1rem',
-                fontWeight: '500',
-                color: '#1c1917',
-                marginBottom: '8px',
-                fontFamily: 'Inter, sans-serif'
-              }}>
-                Mensaje para el conductor (opcional)
-              </label>
-              <textarea
-                rows="3"
-                placeholder="Ej: Llevaré una maleta pequeña"
-                value={bookingNote}
-                onChange={(e) => setBookingNote(e.target.value)}
-                maxLength={200}
-                style={{
-                  width: '100%',
-                  padding: '12px 16px',
-                  fontSize: '15px',
-                  border: '2px solid transparent',
-                  borderRadius: '16px',
-                  backgroundColor: '#d9d9d9',
-                  outline: 'none',
-                  transition: 'all 0.2s',
-                  fontFamily: 'Inter, sans-serif',
-                  resize: 'vertical'
-                }}
-              />
-            </div>
-
-            {/* Actions */}
-            <div style={{ display: 'flex', gap: '12px' }}>
+                Solicitar Reserva
+              </h2>
               <button
                 onClick={() => setShowBookingModal(false)}
-                disabled={bookingLoading}
                 style={{
-                  flex: 1,
-                  padding: '12px',
-                  fontSize: '1rem',
-                  fontWeight: 'normal',
-                  color: '#57534e',
-                  backgroundColor: 'white',
-                  border: '2px solid #d9d9d9',
-                  borderRadius: '25px',
-                  cursor: bookingLoading ? 'not-allowed' : 'pointer',
-                  transition: 'all 0.2s',
-                  fontFamily: 'Inter, sans-serif'
-                }}
-                onMouseEnter={(e) => {
-                  if (!bookingLoading) e.target.style.backgroundColor = '#f5f5f4';
-                }}
-                onMouseLeave={(e) => {
-                  if (!bookingLoading) e.target.style.backgroundColor = 'white';
-                }}
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleSubmitBooking}
-                disabled={bookingLoading}
-                style={{
-                  flex: 1,
-                  padding: '12px',
-                  fontSize: '1rem',
-                  fontWeight: 'normal',
-                  color: 'white',
-                  backgroundColor: bookingLoading ? '#94a3b8' : '#032567',
+                  background: 'none',
                   border: 'none',
-                  borderRadius: '25px',
-                  cursor: bookingLoading ? 'not-allowed' : 'pointer',
-                  transition: 'all 0.2s',
-                  fontFamily: 'Inter, sans-serif',
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
-                }}
-                onMouseEnter={(e) => {
-                  if (!bookingLoading) e.target.style.backgroundColor = '#1A6EFF';
-                }}
-                onMouseLeave={(e) => {
-                  if (!bookingLoading) e.target.style.backgroundColor = '#032567';
+                  fontSize: '24px',
+                  color: '#6b7280',
+                  cursor: 'pointer',
+                  padding: '4px'
                 }}
               >
-                {bookingLoading ? 'Enviando...' : 'Enviar solicitud'}
+                ×
               </button>
+            </div>
+
+            {/* Booking Form */}
+            <div style={{ padding: '24px' }}>
+              {selectedTrip && (
+                <>
+                  <h3 style={{
+                    fontSize: '1.5rem',
+                    fontWeight: 'normal',
+                    color: '#1c1917',
+                    marginBottom: '24px',
+                    fontFamily: 'Inter, sans-serif'
+                  }}>
+                    Solicitar reserva
+                  </h3>
+                  
+                  <div style={{ marginBottom: '20px' }}>
+                    <p style={{
+                      fontSize: '0.9rem',
+                      color: '#57534e',
+                      marginBottom: '8px',
+                      fontFamily: 'Inter, sans-serif'
+                    }}>
+                      Ruta: {selectedTrip.origin.text} → {selectedTrip.destination.text}
+                    </p>
+                    <p style={{
+                      fontSize: '0.9rem',
+                      color: '#57534e',
+                      marginBottom: '8px',
+                      fontFamily: 'Inter, sans-serif'
+                    }}>
+                      Fecha: {new Date(selectedTrip.departureAt).toLocaleDateString('es-CO', {
+                        weekday: 'long',
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </p>
+                    <p style={{
+                      fontSize: '0.9rem',
+                      color: '#57534e',
+                      marginBottom: '8px',
+                      fontFamily: 'Inter, sans-serif'
+                    }}>
+                      Precio por asiento: {new Intl.NumberFormat('es-CO', {
+                        style: 'currency',
+                        currency: 'COP',
+                        minimumFractionDigits: 0
+                      }).format(selectedTrip.pricePerSeat)}
+                    </p>
+                  </div>
+
+                  <div style={{ marginBottom: '20px' }}>
+                    <label style={{
+                      display: 'block',
+                      fontSize: '0.9rem',
+                      color: '#1c1917',
+                      marginBottom: '8px',
+                      fontFamily: 'Inter, sans-serif'
+                    }}>
+                      Asientos
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      max={selectedTrip.availableSeats || selectedTrip.totalSeats}
+                      value={bookingSeats}
+                      onChange={(e) => setBookingSeats(parseInt(e.target.value) || 1)}
+                      style={{
+                        width: '100%',
+                        padding: '10px',
+                        fontSize: '1rem',
+                        border: '1px solid #e7e5e4',
+                        borderRadius: '8px',
+                        fontFamily: 'Inter, sans-serif'
+                      }}
+                    />
+                  </div>
+
+                  <div style={{ marginBottom: '24px' }}>
+                    <label style={{
+                      display: 'block',
+                      fontSize: '0.9rem',
+                      color: '#1c1917',
+                      marginBottom: '8px',
+                      fontFamily: 'Inter, sans-serif'
+                    }}>
+                      Nota (opcional)
+                    </label>
+                    <textarea
+                      value={bookingNote}
+                      onChange={(e) => setBookingNote(e.target.value)}
+                      placeholder="Mensaje para el conductor..."
+                      rows={4}
+                      style={{
+                        width: '100%',
+                        padding: '10px',
+                        fontSize: '1rem',
+                        border: '1px solid #e7e5e4',
+                        borderRadius: '8px',
+                        fontFamily: 'Inter, sans-serif',
+                        resize: 'vertical'
+                      }}
+                    />
+                  </div>
+
+                  {bookingSuccess && (
+                    <div style={{
+                      padding: '12px',
+                      backgroundColor: '#f0fdf4',
+                      border: '1px solid #86efac',
+                      borderRadius: '8px',
+                      marginBottom: '20px',
+                      color: '#15803d',
+                      fontFamily: 'Inter, sans-serif'
+                    }}>
+                      ¡Reserva enviada exitosamente!
+                    </div>
+                  )}
+
+                  <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                    <button
+                      onClick={() => {
+                        setShowBookingModal(false);
+                        setSelectedTrip(null);
+                        setBookingSeats(1);
+                        setBookingNote('');
+                        setBookingSuccess(false);
+                      }}
+                      style={{
+                        padding: '10px 20px',
+                        fontSize: '1rem',
+                        fontWeight: 'normal',
+                        color: '#57534e',
+                        backgroundColor: 'white',
+                        border: '2px solid #d9d9d9',
+                        borderRadius: '25px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        fontFamily: 'Inter, sans-serif'
+                      }}
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      onClick={handleSubmitBooking}
+                      disabled={bookingLoading || bookingSeats < 1}
+                      style={{
+                        padding: '10px 20px',
+                        fontSize: '1rem',
+                        fontWeight: 'normal',
+                        color: 'white',
+                        backgroundColor: bookingLoading || bookingSeats < 1 ? '#94a3b8' : '#032567',
+                        border: 'none',
+                        borderRadius: '25px',
+                        cursor: bookingLoading || bookingSeats < 1 ? 'not-allowed' : 'pointer',
+                        transition: 'all 0.2s',
+                        fontFamily: 'Inter, sans-serif',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!bookingLoading && bookingSeats >= 1) {
+                          e.target.style.backgroundColor = '#1A6EFF';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!bookingLoading && bookingSeats >= 1) {
+                          e.target.style.backgroundColor = '#032567';
+                        }
+                      }}
+                    >
+                      {bookingLoading ? 'Enviando...' : 'Enviar reserva'}
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>

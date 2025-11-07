@@ -14,6 +14,13 @@ import BecomeDriver from './pages/driver/BecomeDriver';
 import MyVehicle from './pages/driver/MyVehicle';
 import CreateTripOffer from './pages/driver/CreateTripOffer';
 import TripDetails from './pages/driver/TripDetails';
+import BookingRequests from './pages/driver/BookingRequests';
+import CreateReview from './pages/reviews/CreateReview';
+import DriverVerificationPage from './pages/driver/DriverVerification';
+import AdminDashboardPage from './pages/admin/AdminDashboard';
+import AdminAuditPage from './pages/admin/AdminAudit';
+import Reports from './pages/Reports';
+import DriverProfile from './pages/DriverProfile';
 
 // Components
 import ProtectedRoute from './components/common/ProtectedRoute';
@@ -49,7 +56,7 @@ function MyTripsRouter() {
 
 export default function App() {
   return (
-    <Router>
+    <Router future={{ v7_relativeSplatPath: true }}>
       <Routes>
         {/* Public routes */}
         <Route path="/" element={<HomePage />} />
@@ -119,6 +126,22 @@ export default function App() {
             </ProtectedRoute>
           } 
         />
+        <Route 
+          path="/driver/booking-requests" 
+          element={
+            <ProtectedRoute requiredRole="driver">
+              <BookingRequests />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/driver/verification"
+          element={
+            <ProtectedRoute requiredRole="driver">
+              <DriverVerificationPage />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Profile route (accessible to both roles) */}
         <Route 
@@ -136,6 +159,54 @@ export default function App() {
           element={
             <ProtectedRoute requiredRole="passenger">
               <BecomeDriver />
+            </ProtectedRoute>
+          } 
+        />
+
+        {/* Review routes */}
+        <Route 
+          path="/trips/:tripId/review" 
+          element={
+            <ProtectedRoute requiredRole="passenger">
+              <CreateReview />
+            </ProtectedRoute>
+          } 
+        />
+
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute requiredRole="admin">
+              <AdminDashboardPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/audit"
+          element={
+            <ProtectedRoute requiredRole="admin">
+              <AdminAuditPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Reports route (accessible to both roles) */}
+        <Route 
+          path="/reports" 
+          element={
+            <ProtectedRoute>
+              <Reports />
+            </ProtectedRoute>
+          } 
+        />
+
+        {/* Driver Profile route (public, shows reviews) */}
+        <Route 
+          path="/drivers/:driverId" 
+          element={
+            <ProtectedRoute>
+              <DriverProfile />
             </ProtectedRoute>
           } 
         />

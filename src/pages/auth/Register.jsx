@@ -93,10 +93,11 @@ export default function Register() {
         <div style={{
           maxWidth: '1280px',
           margin: '0 auto',
-          padding: '16px 24px',
+          padding: 'clamp(12px, 2vw, 16px) clamp(16px, 3vw, 24px)',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between'
+          justifyContent: 'space-between',
+          gap: '12px'
         }}>
           {/* Left: Logo + Text */}
           <Link 
@@ -104,9 +105,11 @@ export default function Register() {
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '12px',
+              gap: 'clamp(6px, 2vw, 12px)',
               textDecoration: 'none',
-              transition: 'opacity 0.2s'
+              transition: 'opacity 0.2s',
+              flex: '1',
+              minWidth: 0
             }}
             onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
             onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
@@ -115,16 +118,20 @@ export default function Register() {
               src={logo} 
               alt="Wheels UniSabana Logo" 
               style={{ 
-                height: '4rem', 
+                height: 'clamp(2.5rem, 8vw, 4rem)', 
                 width: 'auto',
-                objectFit: 'contain'
+                objectFit: 'contain',
+                flexShrink: 0
               }}
             />
             <span style={{
-              fontSize: '20px',
+              fontSize: 'clamp(14px, 3.5vw, 20px)',
               fontWeight: 'normal',
               color: '#1c1917',
-              fontFamily: 'Inter, sans-serif'
+              fontFamily: 'Inter, sans-serif',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis'
             }}>
               Wheels UniSabana
             </span>
@@ -134,19 +141,21 @@ export default function Register() {
           <div style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '8px',
-            fontSize: '1rem',
+            gap: 'clamp(4px, 1vw, 8px)',
+            fontSize: 'clamp(0.8rem, 2vw, 1rem)',
             color: '#57534e',
-            fontFamily: 'Inter, sans-serif'
+            fontFamily: 'Inter, sans-serif',
+            flexShrink: 0
           }}>
-            <span>¿Ya tienes cuenta?</span>
+            <span style={{ display: window.innerWidth < 500 ? 'none' : 'inline' }}>¿Ya tienes cuenta?</span>
             <Link
               to="/login"
               style={{
                 color: '#032567',
                 textDecoration: 'none',
                 fontWeight: '500',
-                transition: 'all 0.2s'
+                transition: 'all 0.2s',
+                whiteSpace: 'nowrap'
               }}
               onMouseEnter={(e) => e.target.style.textDecoration = 'underline'}
               onMouseLeave={(e) => e.target.style.textDecoration = 'none'}
@@ -159,15 +168,15 @@ export default function Register() {
 
       {/* Main Content */}
       <div style={{ 
-        minHeight: 'calc(100vh - 88px)', 
+        minHeight: 'calc(100vh - clamp(64px, 15vw, 88px))', 
         backgroundColor: 'white',
-        padding: '48px 24px'
+        padding: 'clamp(24px, 5vw, 48px) clamp(16px, 3vw, 24px)'
       }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto', width: '100%' }}>
           {/* Page Title */}
-          <div style={{ marginBottom: '32px' }}>
+          <div style={{ marginBottom: 'clamp(20px, 4vw, 32px)' }}>
             <h1 style={{ 
-              fontSize: '2.5rem', 
+              fontSize: 'clamp(1.8rem, 5vw, 2.5rem)', 
               fontWeight: 'normal', 
               color: '#1c1917',
               textAlign: 'left',
@@ -189,7 +198,6 @@ export default function Register() {
             alignItems: 'start',
             gap: '12px'
           }}>
-            <span style={{ color: '#dc2626', fontSize: '20px' }}>⚠️</span>
             <div style={{ flex: 1 }}>
               <p style={{ color: '#991b1b', fontSize: '14px', margin: 0 }}>
                 {error}
@@ -216,16 +224,18 @@ export default function Register() {
         <form onSubmit={handleSubmit(onSubmit)} style={{
           backgroundColor: 'white',
           border: '1px solid #e7e5e4',
-          borderRadius: '16px',
-          padding: '40px',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+          borderRadius: 'clamp(12px, 2vw, 16px)',
+          padding: 'clamp(24px, 5vw, 40px)',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+          maxWidth: '900px',
+          margin: '0 auto'
         }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(20px, 3vw, 24px)' }}>
             {/* Hidden role field - always passenger by default */}
             <input type="hidden" value="passenger" {...register('role')} />
 
             {/* Name fields */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div className="grid-2cols" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div>
                 <label style={{ 
                   display: 'block', 
@@ -349,7 +359,7 @@ export default function Register() {
             </div>
 
             {/* University ID and Phone */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div className="grid-2cols" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div>
                 <label style={{ 
                   display: 'block', 
@@ -432,7 +442,7 @@ export default function Register() {
             </div>
 
             {/* Password fields */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div className="grid-2cols" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div>
                 <label style={{ 
                   display: 'block', 
@@ -517,12 +527,17 @@ export default function Register() {
             </div>
 
             {/* Action buttons */}
-            <div style={{ display: 'flex', gap: '16px', justifyContent: 'flex-end' }}>
+            <div style={{ 
+              display: 'flex', 
+              gap: 'clamp(8px, 2vw, 16px)', 
+              justifyContent: 'flex-end',
+              flexWrap: 'wrap'
+            }}>
               <Link
                 to="/"
                 style={{
-                  padding: '0.5rem 1.25rem',
-                  fontSize: '1.2rem',
+                  padding: 'clamp(8px, 1.5vw, 12px) clamp(16px, 3vw, 24px)',
+                  fontSize: 'clamp(0.9rem, 2vw, 1.2rem)',
                   fontWeight: 'normal',
                   color: '#032567',
                   backgroundColor: 'white',
@@ -532,7 +547,9 @@ export default function Register() {
                   transition: 'all 0.2s',
                   fontFamily: 'Inter, sans-serif',
                   textDecoration: 'none',
-                  display: 'inline-block'
+                  display: 'inline-block',
+                  textAlign: 'center',
+                  minWidth: 'fit-content'
                 }}
                 onMouseEnter={(e) => {
                   e.target.style.backgroundColor = '#f0f9ff';
@@ -548,8 +565,8 @@ export default function Register() {
                 type="submit"
                 disabled={loading}
                 style={{
-                  padding: '0.5rem 1.25rem',
-                  fontSize: '1.2rem',
+                  padding: 'clamp(8px, 1.5vw, 12px) clamp(16px, 3vw, 24px)',
+                  fontSize: 'clamp(0.9rem, 2vw, 1.2rem)',
                   fontWeight: 'normal',
                   color: 'white',
                   backgroundColor: loading ? '#94a3b8' : '#032567',
@@ -558,7 +575,8 @@ export default function Register() {
                   cursor: loading ? 'not-allowed' : 'pointer',
                   transition: 'all 0.2s',
                   fontFamily: 'Inter, sans-serif',
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                  minWidth: 'fit-content'
                 }}
                 onMouseEnter={(e) => {
                   if (!loading) e.target.style.backgroundColor = '#1A6EFF';
@@ -575,6 +593,15 @@ export default function Register() {
 
         </div>
       </div>
+
+      {/* Responsive Styles */}
+      <style>{`
+        @media (max-width: 640px) {
+          .grid-2cols {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}</style>
     </>
   );
 }

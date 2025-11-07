@@ -4,6 +4,7 @@ import useAuthStore from '../store/authStore';
 import { searchTrips } from '../api/trip';
 import { getMyTripOffers } from '../api/tripOffer';
 import logo from '../assets/images/UniSabana Logo.png';
+import NotificationBell from '../components/notifications/NotificationBell';
 
 /**
  * Dashboard - Main landing page for authenticated users
@@ -142,10 +143,11 @@ export default function Dashboard() {
         <div style={{
           maxWidth: '1280px',
           margin: '0 auto',
-          padding: '16px 24px',
+          padding: 'clamp(12px, 2vw, 16px) clamp(16px, 3vw, 24px)',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between'
+          justifyContent: 'space-between',
+          gap: '12px'
         }}>
           {/* Left: Logo + Text */}
           <Link 
@@ -153,9 +155,11 @@ export default function Dashboard() {
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '12px',
+              gap: 'clamp(6px, 2vw, 12px)',
               textDecoration: 'none',
-              transition: 'opacity 0.2s'
+              transition: 'opacity 0.2s',
+              flex: '0 1 auto',
+              minWidth: 0
             }}
             onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
             onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
@@ -164,36 +168,41 @@ export default function Dashboard() {
               src={logo} 
               alt="Wheels UniSabana Logo" 
               style={{ 
-                height: '4rem', 
+                height: 'clamp(2.5rem, 8vw, 4rem)', 
                 width: 'auto',
-                objectFit: 'contain'
+                objectFit: 'contain',
+                flexShrink: 0
               }}
             />
-            <span style={{
-              fontSize: '20px',
+            <span className="dashboard-logo-text" style={{
+              fontSize: 'clamp(14px, 3.5vw, 20px)',
               fontWeight: 'normal',
               color: '#1c1917',
-              fontFamily: 'Inter, sans-serif'
+              fontFamily: 'Inter, sans-serif',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis'
             }}>
               Wheels UniSabana
             </span>
           </Link>
 
           {/* Center: Navigation Links */}
-          <nav style={{
+          <nav className="dashboard-nav" style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '32px'
+            gap: 'clamp(12px, 3vw, 32px)'
           }}>
             <Link
               to="/my-trips"
               style={{
-                fontSize: '1rem',
+                fontSize: 'clamp(0.85rem, 2vw, 1rem)',
                 fontWeight: '500',
                 color: '#1c1917',
                 textDecoration: 'none',
                 transition: 'color 0.2s',
-                fontFamily: 'Inter, sans-serif'
+                fontFamily: 'Inter, sans-serif',
+                whiteSpace: 'nowrap'
               }}
               onMouseEnter={(e) => e.target.style.color = '#032567'}
               onMouseLeave={(e) => e.target.style.color = '#1c1917'}
@@ -203,13 +212,15 @@ export default function Dashboard() {
             
             <Link
               to="/reports"
+              className="hide-on-mobile"
               style={{
-                fontSize: '1rem',
+                fontSize: 'clamp(0.85rem, 2vw, 1rem)',
                 fontWeight: '500',
                 color: '#1c1917',
                 textDecoration: 'none',
                 transition: 'color 0.2s',
-                fontFamily: 'Inter, sans-serif'
+                fontFamily: 'Inter, sans-serif',
+                whiteSpace: 'nowrap'
               }}
               onMouseEnter={(e) => e.target.style.color = '#032567'}
               onMouseLeave={(e) => e.target.style.color = '#1c1917'}
@@ -217,34 +228,44 @@ export default function Dashboard() {
               Reportes
             </Link>
             
-            <Link
-              to="/search"
-              style={{
-                fontSize: '1rem',
-                fontWeight: '500',
-                color: '#1c1917',
-                textDecoration: 'none',
-                transition: 'color 0.2s',
-                fontFamily: 'Inter, sans-serif'
-              }}
-              onMouseEnter={(e) => e.target.style.color = '#032567'}
-              onMouseLeave={(e) => e.target.style.color = '#1c1917'}
-            >
-              Buscar viajes
-            </Link>
+            {/* Only show "Buscar" for passengers */}
+            {!isDriver && (
+              <Link
+                to="/search"
+                style={{
+                  fontSize: 'clamp(0.85rem, 2vw, 1rem)',
+                  fontWeight: '500',
+                  color: '#1c1917',
+                  textDecoration: 'none',
+                  transition: 'color 0.2s',
+                  fontFamily: 'Inter, sans-serif',
+                  whiteSpace: 'nowrap'
+                }}
+                onMouseEnter={(e) => e.target.style.color = '#032567'}
+                onMouseLeave={(e) => e.target.style.color = '#1c1917'}
+              >
+                Buscar
+              </Link>
+            )}
           </nav>
 
-          {/* Right: Role Status + Profile */}
+          {/* Right: Notifications + Role Status + Profile */}
           <div style={{
             display: 'flex',
             alignItems: 'center',
             gap: '16px'
           }}>
+            {/* Notifications */}
+            {user && (
+              <NotificationBell />
+            )}
+            
             {/* Role indicator */}
             <div style={{
               padding: '6px 16px',
-              backgroundColor: isDriver ? '#032567' : '#f0f9ff',
+              backgroundColor: isDriver ? '#032567' : 'white',
               color: isDriver ? 'white' : '#032567',
+              border: '2px solid #032567',
               borderRadius: '20px',
               fontSize: '0.9rem',
               fontWeight: '500',
@@ -373,6 +394,7 @@ export default function Dashboard() {
                         Mi vehículo
                       </button>
                     )}
+
                   </div>
 
                   {/* Logout */}
@@ -419,7 +441,7 @@ export default function Dashboard() {
         {/* Hero / Welcome Section */}
         <div style={{ marginBottom: '48px' }}>
           <h1 style={{
-            fontSize: '3rem',
+            fontSize: '4.5rem',
             fontWeight: 'normal',
             color: '#1c1917',
             marginBottom: '8px',
@@ -428,7 +450,7 @@ export default function Dashboard() {
             ¡Hola de nuevo, {user?.firstName}!
           </h1>
           <p style={{
-            fontSize: '1.2rem',
+            fontSize: '1.8rem',
             color: '#57534e',
             fontFamily: 'Inter, sans-serif'
           }}>
@@ -498,8 +520,13 @@ export default function Dashboard() {
             {/* Driver Content */}
             {isDriver && (
               <>
-                {/* CTA Button - Offer new trip */}
-                <div style={{ marginBottom: '40px' }}>
+                {/* CTA Buttons */}
+                <div style={{ 
+                  marginBottom: '40px',
+                  display: 'flex',
+                  gap: '16px',
+                  flexWrap: 'wrap'
+                }}>
                   <button
                     onClick={() => navigate('/driver/create-trip')}
                     style={{
@@ -542,7 +569,7 @@ export default function Dashboard() {
                   marginBottom: '24px'
                 }}>
                   <h2 style={{
-                    fontSize: '1.8rem',
+                    fontSize: '2.5rem',
                     fontWeight: 'normal',
                     color: '#1c1917',
                     fontFamily: 'Inter, sans-serif'
@@ -585,7 +612,6 @@ export default function Dashboard() {
                     borderRadius: '16px',
                     border: '2px dashed #e7e5e4'
                   }}>
-                    <div style={{ fontSize: '4rem', marginBottom: '16px' }}>🚗</div>
                     <h3 style={{
                       fontSize: '1.5rem',
                       fontWeight: 'normal',
@@ -721,7 +747,7 @@ export default function Dashboard() {
                           color: '#57534e',
                           fontFamily: 'Inter, sans-serif'
                         }}>
-                          <span>💺 {trip.totalSeats} asientos</span>
+                          <span>{trip.totalSeats} asientos</span>
                           {trip.notes && (
                             <span style={{
                               maxWidth: '150px',
@@ -729,7 +755,7 @@ export default function Dashboard() {
                               textOverflow: 'ellipsis',
                               whiteSpace: 'nowrap'
                             }}>
-                              💬 {trip.notes}
+                              {trip.notes}
                             </span>
                           )}
                         </div>
@@ -740,18 +766,6 @@ export default function Dashboard() {
               </>
             )}
 
-            {/* Passenger Content (placeholder for now) */}
-            {!isDriver && (
-              <div style={{
-                textAlign: 'center',
-                color: '#57534e',
-                fontSize: '1.1rem',
-                padding: '40px',
-                fontFamily: 'Inter, sans-serif'
-              }}>
-                📊 Vista de pasajero en construcción...
-              </div>
-            )}
           </>
         )}
       </div>
